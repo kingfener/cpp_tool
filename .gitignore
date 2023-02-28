@@ -1,0 +1,7 @@
+# 注释行
+*.a      # 忽略所有 .a 文件
+!lib.a   # lib.a 除外
+/TODO    # 仅仅忽略项目根目录下的 TODO 文件夹。不包括 subdir/TODO
+build/   # 胡洛 build/ 下所有文件
+doc/*.txt# 忽略 doc/note.txt 但不包括 doc/sub/arch.txt
+
