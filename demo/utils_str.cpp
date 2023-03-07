@@ -1,7 +1,60 @@
 #include "utils_str.h"
+#include <codecvt>
 
+std::string digit_to_chinese(const std::string& str_in,int is_tele_num){
+    // 将输入字符串 str_in 中的 阿拉伯数字 0~9 逐个转换成 零~九。 2：二
+    // 如果 is_tele_num 为 true, 1： 一 ——> 幺，
+    // 备注： 
+        // 数字 0-9 的 wchar: [48,57]
+        // 零 : 38646
+        // 一 : 19968
+        // 幺 : 24186
+        // 二 : 20108
+        // 三 : 19977
+        // 四 : 22235
+        // 五 : 20116
+        // 六 : 20845
+        // 七 : 19971
+        // 八 : 20843
+        // 九 : 20061
+    // 
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+    std::wstring ws = conv.from_bytes(str_in);
+    std::wstring nws;
+    for (wchar_t ch:ws){
+        if (ch==48){
+            nws.push_back(38646);
+        } else if (ch==49){
+            if (is_tele_num){
+                nws.push_back(24186);
+            } else {
+                nws.push_back(19968);
+            }
+        } else if (ch==50){ // 2
+            nws.push_back(20108);
+        } else if (ch==51){
+            nws.push_back(19977);
+        } else if (ch==52){ //4
+            nws.push_back(22235);
+        } else if (ch==53){
+            nws.push_back(20116);
+        } else if (ch==54){
+            nws.push_back(20845);
+        } else if (ch==55){
+            nws.push_back(19971);
+        } else if (ch==56){
+            nws.push_back(20843);
+        } else if (ch==57){
+            nws.push_back(20061);
+        } else {
+            nws.push_back(ch);
+        } 
+    }
+    std::string chn_str = conv.to_bytes(nws);
+    return chn_str;
+}
 
-void regex_seg(const std::string str_in,std::regex reg,std::vector<std::string>& rec_str_vec,std::vector<int>& rec_mark_vec,int debug){
+void regex_seg(const std::string& str_in,std::regex reg,std::vector<std::string>& rec_str_vec,std::vector<int>& rec_mark_vec,int debug){
     // 根据 reg 对 str_in 进行分段，
     // 结果存 rec_str_vec，匹配的 mark=1 存 rec_mark_vec
     
@@ -60,8 +113,10 @@ void regex_seg(const std::string str_in,std::regex reg,std::vector<std::string>&
     rec_mark_vec = std::move(tmp_mark_vec_all);
 }
 
-void str_to_vec(const std::string str_in,std::vector<std::string>& rec_str_vec,std::vector<int>& rec_len_vec,int debug){
+void str_to_vec(const std::string& str_in,std::vector<std::string>& rec_str_vec,std::vector<int>& rec_len_vec,int debug){
     // 将输入 str_in 分解成 单个 元素的 vec。
+    // 返回 rec_str_vec 内容向量
+    //      rec_len_vec 元素字节长度向量
     std::vector<std::string> tmp_str_vec;
     std::vector<int> tmp_len_vec;
     std::string seg_str;
