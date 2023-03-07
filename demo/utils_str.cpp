@@ -1,6 +1,82 @@
 #include "utils_str.h"
 #include <codecvt>
 
+void NumberToChinese(unsigned long num, std::string& chnStr){
+    // ref： http://data.biancheng.net/view/146.html
+    // unsigned long 最大支持 18446744073709551615 ： 
+        // 一千八百四十四万兆六千七百四十四万亿零七百三十七亿零九百五十五万一千六百一十五
+    // 超过概述，会被转换成 ：18446744073709551615 。
+    const int CHN_NUM_CHAR_COUNT = 10;
+    const char *chnNumChar[CHN_NUM_CHAR_COUNT] = {"零","一","二","三","四","五","六","七","八","九"};
+    const char *chnUnitSection[] = {"","万","亿","万亿","万兆","垓"};
+    const char *chnUnitChar[] = {"","十","百","千"};
+    //num == 0需要特殊处理，直接返回"零"
+    if (num==0){
+        chnStr = chnNumChar[num];
+        return;
+    }
+    int unitPos = 0;
+    std::string strIns;
+    bool needZero = false;
+    int id = 0;
+    while(num > 0)
+    {
+        id += 1;
+        std::string strIns;
+        unsigned long section = num % 10000;
+        if(needZero)
+        {
+            chnStr.insert(0, chnNumChar[0]);
+        }
+        SectionToChinese(section, strIns);
+        /*是否需要节权位？ */
+        if (section){
+            // strIns += (section != 0) ? chnUnitSection[unitPos] : chnUnitSection[0];
+            strIns += chnUnitSection[unitPos];
+            chnStr.insert(0, strIns);
+        }
+        /*千位是0需要在下一个section补零*/
+        needZero = (section < 1000) && (section > 0);
+        num = num / 10000;
+        unitPos++;
+    }
+    // 一十几 -> 十几
+    if ((chnStr.substr(0,3)=="一") && (chnStr.substr(3,3)=="十")){
+        chnStr = chnStr.substr(3,chnStr.size());
+    }
+    // xxx零 -> xxx
+    if (chnStr.substr(chnStr.size()-3,chnStr.size())=="零"){
+        chnStr = chnStr.substr(0,chnStr.size()-3);
+    }
+}
+
+void SectionToChinese(unsigned long section, std::string& chnStr){
+    const int CHN_NUM_CHAR_COUNT = 10;
+    const char *chnNumChar[CHN_NUM_CHAR_COUNT] = {"零","一","二","三","四","五","六","七","八","九"};
+    const char *chnUnitSection[] = {"","万","亿","万亿"};
+    const char *chnUnitChar[] = {"","十","百","千"};
+    std::string strIns;
+    int unitPos = 0;
+    bool zero = true;
+    while(section > 0)
+    {
+        int v = section % 10;
+        if(v == 0){
+            if( (section==0) || !zero ){
+                zero = true; /*需要补，zero的作用是确保对连续的多个，只补一个中文零*/
+                chnStr.insert(0, chnNumChar[v]);
+            }
+        } else {
+            zero = false;              //至少有一个数字不是
+            strIns = chnNumChar[v];    //此位对应的中文数字
+            strIns += chnUnitChar[unitPos]; //此位对应的中文权位
+            chnStr.insert(0, strIns);
+        }
+        unitPos++; //移位
+        section = section / 10;
+    }
+}
+
 std::string digit_to_chinese(const std::string& str_in,int is_tele_num){
     // 将输入字符串 str_in 中的 阿拉伯数字 0~9 逐个转换成 零~九。 2：二
     // 如果 is_tele_num 为 true, 1： 一 ——> 幺，
